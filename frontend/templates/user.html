@@ -2,4 +2,8 @@
 {% block content %}
   <h2>Welcome, {{ name }}</h2>
   <p>Your profile page</p>
+  {% if current_user.is_authenticated %}
+  <p>Welcome, {{ current_user.username }} | <a href="{{ url_for('logout') }}">Logout</a></p>
+{% endif %}
+
 {% endblock %}

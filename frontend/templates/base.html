@@ -1,11 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pomoweb</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
-    <p> Helo </p>
-  {% block content %}{% endblock %}
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <header class="bg-white shadow">
+    <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold text-red-500">Pomoweb</a>
+      <ul class="flex space-x-6 text-sm font-medium">
+        <li><a href="{{ url_for('home') }}" class="hover:text-red-500">Home</a></li>
+        <li><a href="{{ url_for('tasks') }}" class="hover:text-red-500">Tasks</a></li>
+        <li><a href="{{ url_for('report') }}" class="hover:text-red-500">Reports</a></li>
+        <li><a href="{{ url_for('login') }}" class="hover:text-red-500">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-grow container mx-auto px-4 py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white text-center text-sm py-4 border-t">
+    © 2025 Pomoweb. Stay focused, stay productive.
+  </footer>
+
 </body>
 </html>
