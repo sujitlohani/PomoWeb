@@ -1,85 +1,80 @@
 {% extends "base.html" %}
+{% block title %}Home · Pomoweb{% endblock %}
 {% block content %}
-<div class="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
-  <div class="text-center">
-    <h1 class="text-4xl font-bold mb-4 text-gray-800">Welcome to Pomoweb</h1>
-    <p class="mb-8 text-gray-600">Stay focused and manage your tasks efficiently.</p>
-
-    <!-- Pomodoro Timer -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm">
-      <div class="flex justify-center gap-2 mb-4">
-        <button onclick="setMode('pomodoro')" id="mode-pomodoro" class="mode-btn px-4 py-1 rounded-full border text-sm font-medium bg-blue-100 text-blue-700">Pomodoro</button>
-        <button onclick="setMode('short')" id="mode-short" class="mode-btn px-4 py-1 rounded-full border text-sm text-gray-500">Short Break</button>
-        <button onclick="setMode('long')" id="mode-long" class="mode-btn px-4 py-1 rounded-full border text-sm text-gray-500">Long Break</button>
-      </div>
-      <div id="timer" class="text-6xl font-bold text-gray-800 mb-6">25:00</div>
-      <div class="flex justify-center gap-4">
-        <button onclick="toggleTimer()" id="startBtn" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700">
-          Start
-        </button>
-        <button onclick="resetTimer()" title="Reset timer" class="ml-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 shadow transition-colors duration-150">
-          <svg class="w-6 h-6 text-gray-600 hover:text-red-500 transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-3.59-7.03"/>
-          </svg>
-        </button>
+<div class="grid md:grid-cols-2 gap-8 items-start">
+  <!-- Timer Card -->
+  <section class="glass-card p-6 sm:p-8 rounded-2xl shadow-soft">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-xl font-semibold tracking-tight">Pomodoro</h1>
+      <div class="inline-flex rounded-full bg-slate-100 p-1">
+        <button onclick="setMode('pomodoro')" id="mode-pomodoro" class="tab">Focus</button>
+        <button onclick="setMode('short')" id="mode-short" class="tab">Short</button>
+        <button onclick="setMode('long')" id="mode-long" class="tab">Long</button>
       </div>
     </div>
 
-<!-- Add Task -->
-<div class="mt-8">
-  <button onclick="openTaskModal()" class="border-2 border-dashed border-gray-400 text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-100">
-    + Add Task
-  </button>
+    <div id="timer" class="text-6xl sm:text-7xl font-semibold tabular-nums text-slate-900 text-center my-6">25:00</div>
+
+    <div class="flex items-center justify-center gap-3">
+      <button id="startBtn" onclick="toggleTimer()" class="btn-primary">Start</button>
+      <button onclick="resetTimer()" class="btn-outline" title="Reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- Tasks Card on Home -->
+  <section class="glass-card p-6 sm:p-8 rounded-2xl shadow-soft">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold">Quick Tasks</h2>
+      <button onclick="openTaskModal()" class="btn-ghost">+ Add</button>
+    </div>
+
+    <div class="space-y-3">
+      {% if tasks %}
+        {% for task in tasks %}
+          <div class="flex items-center justify-between bg-white/70 rounded-xl border border-slate-200 p-3">
+            <div class="flex items-center gap-3">
+              <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}">
+                <button type="submit" class="h-5 w-5 rounded-full border border-slate-300 flex items-center justify-center">
+                  {% if task.completed %}
+                    <span class="h-3 w-3 rounded-full bg-accent-500 inline-block"></span>
+                  {% endif %}
+                </button>
+              </form>
+              <span class="{% if task.completed %}line-through text-slate-400{% endif %}">{{ task.description }}</span>
+            </div>
+            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}">
+              <button class="text-slate-500 hover:text-red-600" title="Delete">Delete</button>
+            </form>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-slate-500">No tasks yet. Add your first focus item.</p>
+      {% endif %}
+    </div>
+
+    <div class="mt-5 text-right">
+      <a href="{{ url_for('tasks') }}" class="text-sm text-slate-600 hover:text-slate-900 underline-offset-4 hover:underline">Open full task list →</a>
+    </div>
+  </section>
 </div>
 
-<!-- Task Modal -->
-<div id="taskModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden">
-  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
-    <button onclick="closeTaskModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
-    <h2 class="text-2xl font-semibold mb-4">Add a New Task</h2>
-    <form action="{{ url_for('add_task') }}" method="POST">
-      <input name="description" type="text" placeholder="What do you want to work on?" class="w-full border px-4 py-2 rounded-lg mb-4 focus:outline-none focus:ring" required>
-      <div class="flex justify-end gap-4">
-        <button type="button" onclick="closeTaskModal()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Task</button>
+<!-- Add Task Modal -->
+<div id="taskModal" class="fixed inset-0 z-40 hidden">
+  <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onclick="closeTaskModal()"></div>
+  <div class="relative z-10 max-w-md mx-auto mt-28 glass-card rounded-2xl shadow-soft p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold">Add a New Task</h3>
+      <button onclick="closeTaskModal()" class="text-slate-500 hover:text-slate-700">Close</button>
+    </div>
+    <form action="{{ url_for('add_task') }}" method="POST" class="space-y-4">
+      <input name="description" type="text" placeholder="What will you focus on?" class="input" required>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeTaskModal()" class="btn-outline">Cancel</button>
+        <button type="submit" class="btn-primary">Save Task</button>
       </div>
     </form>
   </div>
 </div>
-
-<!-- Task List -->
-<div class="mt-10 w-full max-w-md">
-  <h3 class="text-xl font-semibold mb-4 text-gray-800 text-left">Your Tasks</h3>
-  {% if tasks %}
-    <ul class="space-y-3">
-      {% for task in tasks %}
-        <li class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-          <div class="flex items-center gap-2">
-            <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}">
-              <button type="submit" title="Toggle complete">
-                {% if task.completed %}
-                  ✅
-                {% else %}
-                  ⭕
-                {% endif %}
-              </button>
-            </form>
-            <span class="{% if task.completed %}line-through text-gray-400{% endif %}">
-              {{ task.description }}
-            </span>
-          </div>
-          <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}">
-            <button type="submit" title="Delete task" class="text-red-500 hover:text-red-700">🗑</button>
-          </form>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-gray-500 text-center">No tasks yet. Add one above!</p>
-  {% endif %}
-</div>
-
-
 
 <script>
   let mode = "pomodoro";
@@ -87,72 +82,39 @@
   let timerInterval = null;
   let timeLeft = 25 * 60;
 
-  const modeDurations = {
-    pomodoro: 25 * 60,
-    short: 5 * 60,
-    long: 15 * 60
-  };
+  const modeDurations = { pomodoro: 25 * 60, short: 5 * 60, long: 15 * 60 };
 
   function updateTimerDisplay() {
-    const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-    const seconds = String(timeLeft % 60).padStart(2, '0');
-    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const s = String(timeLeft % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
   }
 
   function setMode(newMode) {
-    mode = newMode;
-    resetTimer();
-    highlightModeButton();
+    mode = newMode; resetTimer(); highlightModeButton();
   }
 
   function highlightModeButton() {
-    document.querySelectorAll(".mode-btn").forEach(btn => {
-      btn.classList.remove("bg-blue-100", "text-blue-700", "font-medium");
-      btn.classList.add("text-gray-500");
-    });
+    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active-tab'));
     const active = document.getElementById(`mode-${mode}`);
-    active.classList.add("bg-blue-100", "text-blue-700", "font-medium");
-    active.classList.remove("text-gray-500");
+    active.classList.add('active-tab');
   }
 
   function toggleTimer() {
     const startBtn = document.getElementById('startBtn');
     if (!isRunning) {
-      isRunning = true;
-      startBtn.textContent = "Pause";
+      isRunning = true; startBtn.textContent = 'Pause';
       timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-          timeLeft--;
-          updateTimerDisplay();
-        } else {
-          clearInterval(timerInterval);
-          isRunning = false;
-          startBtn.textContent = "Start";
-          alert("Time's up!");
-        }
+        if (timeLeft > 0) { timeLeft--; updateTimerDisplay(); }
+        else { clearInterval(timerInterval); isRunning = false; startBtn.textContent = 'Start'; alert("Time's up"); }
       }, 1000);
-    } else {
-      clearInterval(timerInterval);
-      isRunning = false;
-      startBtn.textContent = "Start";
-    }
+    } else { clearInterval(timerInterval); isRunning = false; startBtn.textContent = 'Start'; }
   }
 
-  function resetTimer() {
-    clearInterval(timerInterval);
-    isRunning = false;
-    timeLeft = modeDurations[mode];
-    updateTimerDisplay();
-    document.getElementById('startBtn').textContent = "Start";
-  }
+  function resetTimer() { clearInterval(timerInterval); isRunning = false; timeLeft = modeDurations[mode]; updateTimerDisplay(); document.getElementById('startBtn').textContent = 'Start'; }
 
-  function openTaskModal() {
-  document.getElementById('taskModal').classList.remove('hidden');
-  }
-  function closeTaskModal() {
-  document.getElementById('taskModal').classList.add('hidden');
-  }
-
+  function openTaskModal(){ document.getElementById('taskModal').classList.remove('hidden'); }
+  function closeTaskModal(){ document.getElementById('taskModal').classList.add('hidden'); }
 
   highlightModeButton();
   updateTimerDisplay();

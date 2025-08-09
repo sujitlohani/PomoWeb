@@ -1,9 +1,14 @@
 {% extends "base.html" %}
+{% block title %}Profile · Pomoweb{% endblock %}
 {% block content %}
-  <h2>Welcome, {{ name }}</h2>
-  <p>Your profile page</p>
-  {% if current_user.is_authenticated %}
-  <p>Welcome, {{ current_user.username }} | <a href="{{ url_for('logout') }}">Logout</a></p>
-{% endif %}
+<div class="max-w-2xl mx-auto">
+  <div class="glass-card rounded-2xl p-6 shadow-soft">
+    <h2 class="text-xl font-semibold">Welcome{% if current_user.is_authenticated %}, {{ current_user.username }}{% elif name %}, {{ name }}{% endif %}</h2>
+    <p class="text-slate-600 mt-2">Your profile</p>
 
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('logout') }}" class="btn-outline mt-6 inline-block">Logout</a>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

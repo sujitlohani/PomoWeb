@@ -1,18 +1,23 @@
 {% extends "base.html" %}
+{% block title %}Register · Pomoweb{% endblock %}
 {% block content %}
-<div class="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
-  <div class="w-full max-w-md bg-white rounded-xl shadow-md p-6">
-    <h2 class="text-xl font-bold mb-4 text-gray-800">Register</h2>
+<div class="max-w-md mx-auto">
+  <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-soft">
+    <h2 class="text-xl font-semibold mb-2">Create account</h2>
+    <p class="text-slate-600 mb-6">A calmer way to focus and get work done.</p>
+
     {% if error %}
-      <p class="text-red-500 mb-4">{{ error }}</p>
+      <p class="mb-4 text-red-600">{{ error }}</p>
     {% endif %}
-    <form method="POST" class="flex flex-col gap-4">
-      <input type="text" name="username" placeholder="Username" required class="border px-4 py-2 rounded-md" />
-      <input type="password" name="password" placeholder="Password" required class="border px-4 py-2 rounded-md" />
-      <input type="submit" value="Register" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" />
+
+    <form method="POST" class="space-y-4">
+      <input type="text" name="username" placeholder="Username" required class="input" />
+      <input type="password" name="password" placeholder="Password" required class="input" />
+      <button type="submit" class="btn-primary w-full">Register</button>
     </form>
-    <p class="text-sm mt-4 text-gray-600">Already registered?
-      <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Login here</a>
+
+    <p class="text-sm text-slate-600 mt-6">Already have an account?
+      <a href="{{ url_for('login') }}" class="link">Sign in</a>
     </p>
   </div>
 </div>

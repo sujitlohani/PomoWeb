@@ -3,39 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pomoweb</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <title>{% block title %}Pomoweb{% endblock %}</title>
+
+  <!-- Tailwind v3 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system"] },
+          colors: {
+            accent: {
+              50: '#EDF8F5', 100: '#D9F1EA', 200: '#B7E3D5', 300: '#8FD2BD', 400: '#68C2A6',
+              500: '#45B190', 600: '#329C7E', 700: '#2A7B65', 800: '#225E50', 900: '#17443A'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 40px rgba(0,0,0,0.06)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+<body class="min-h-screen font-sans bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800">
+  <!-- Background texture / noise -->
+  <div class="noise pointer-events-none"></div>
 
   <!-- Navbar -->
-  <header class="bg-white shadow">
-    <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <a href="{{ url_for('home') }}" class="text-2xl font-bold text-red-500">Pomoweb</a>
-      <ul class="flex space-x-6 text-sm font-medium">
-        <li><a href="{{ url_for('home') }}" class="hover:text-red-500">Home</a></li>
-        <li><a href="{{ url_for('tasks') }}" class="hover:text-red-500">Tasks</a></li>
-        <li><a href="{{ url_for('report') }}" class="hover:text-red-500">Reports</a></li>
-        {% if current_user.is_authenticated %}
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        {% else %}
-            <li><a href="{{ url_for('login') }}">Login</a></li>
-        {% endif %}
+  <header class="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b border-slate-200/60">
+    <nav class="container mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center justify-between">
+      <a href="{{ url_for('home') }}" class="flex items-center gap-2 group">
+        <span class="inline-block h-8 w-8 rounded-xl bg-accent-500/90 shadow-soft"></span>
+        <span class="text-lg sm:text-xl font-semibold tracking-tight text-slate-900">Pomoweb</span>
+      </a>
 
+      <button class="sm:hidden p-2 rounded-md hover:bg-slate-100" id="navToggle" aria-label="Open Menu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
+      </button>
+
+      <ul id="navMenu" class="hidden sm:flex items-center gap-6 text-[15px]">
+        <li><a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a></li>
+        <li><a class="nav-link {% if request.endpoint == 'tasks' %}active{% endif %}" href="{{ url_for('tasks') }}">Tasks</a></li>
+        <li><a class="nav-link {% if request.endpoint == 'report' %}active{% endif %}" href="{{ url_for('report') }}">Reports</a></li>
+        {% if current_user.is_authenticated %}
+          <li><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+        {% else %}
+          <li><a class="nav-link {% if request.endpoint in ['login','register'] %}active{% endif %}" href="{{ url_for('login') }}">Login</a></li>
+        {% endif %}
       </ul>
     </nav>
   </header>
 
-  <!-- Main Content Area -->
-  <main class="flex-grow container mx-auto px-4 py-6">
+  <!-- Collapsible menu for mobile -->
+  <div id="navDrawer" class="sm:hidden hidden border-b border-slate-200/60 bg-white/95 backdrop-blur">
+    <div class="container mx-auto max-w-6xl px-4 sm:px-6 py-3">
+      <a class="nav-link block py-2 {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a>
+      <a class="nav-link block py-2 {% if request.endpoint == 'tasks' %}active{% endif %}" href="{{ url_for('tasks') }}">Tasks</a>
+      <a class="nav-link block py-2 {% if request.endpoint == 'report' %}active{% endif %}" href="{{ url_for('report') }}">Reports</a>
+      {% if current_user.is_authenticated %}
+        <a class="nav-link block py-2" href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a class="nav-link block py-2 {% if request.endpoint in ['login','register'] %}active{% endif %}" href="{{ url_for('login') }}">Login</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="container mx-auto max-w-6xl px-4 sm:px-6 py-8">
     {% block content %}{% endblock %}
   </main>
 
   <!-- Footer -->
-  <footer class="bg-white text-center text-sm py-4 border-t">
-    © 2025 Pomoweb. Stay focused, stay productive.
+  <footer class="border-t border-slate-200/70 bg-white/80 backdrop-blur">
+    <div class="container mx-auto max-w-6xl px-4 sm:px-6 py-6 text-sm text-slate-600 flex items-center justify-between">
+      <p>© 2025 Pomoweb</p>
+      <p class="hidden sm:block">Calm focus. Gentle progress.</p>
+    </div>
   </footer>
 
+  <script>
+    // Mobile nav toggle
+    const btn = document.getElementById('navToggle');
+    const drawer = document.getElementById('navDrawer');
+    const menu = document.getElementById('navMenu');
+    btn && btn.addEventListener('click', ()=>{ drawer.classList.toggle('hidden'); });
+  </script>
 </body>
 </html>
