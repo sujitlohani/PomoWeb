@@ -17,7 +17,12 @@
         <li><a href="{{ url_for('home') }}" class="hover:text-red-500">Home</a></li>
         <li><a href="{{ url_for('tasks') }}" class="hover:text-red-500">Tasks</a></li>
         <li><a href="{{ url_for('report') }}" class="hover:text-red-500">Reports</a></li>
-        <li><a href="{{ url_for('login') }}" class="hover:text-red-500">Login</a></li>
+        {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        {% else %}
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+        {% endif %}
+
       </ul>
     </nav>
   </header>

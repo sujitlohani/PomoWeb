@@ -8,27 +8,153 @@
     <!-- Pomodoro Timer -->
     <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm">
       <div class="flex justify-center gap-2 mb-4">
-        <button class="px-4 py-1 rounded-full border text-sm font-medium bg-blue-100 text-blue-700">Pomodoro</button>
-        <button class="px-4 py-1 rounded-full border text-sm text-gray-500">Short Break</button>
-        <button class="px-4 py-1 rounded-full border text-sm text-gray-500">Long Break</button>
+        <button onclick="setMode('pomodoro')" id="mode-pomodoro" class="mode-btn px-4 py-1 rounded-full border text-sm font-medium bg-blue-100 text-blue-700">Pomodoro</button>
+        <button onclick="setMode('short')" id="mode-short" class="mode-btn px-4 py-1 rounded-full border text-sm text-gray-500">Short Break</button>
+        <button onclick="setMode('long')" id="mode-long" class="mode-btn px-4 py-1 rounded-full border text-sm text-gray-500">Long Break</button>
       </div>
-      <div class="text-6xl font-bold text-gray-800 mb-6">25:00</div>
+      <div id="timer" class="text-6xl font-bold text-gray-800 mb-6">25:00</div>
       <div class="flex justify-center gap-4">
-        <button class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700">Start</button>
-        <button class="text-gray-400 hover:text-gray-600">
-          <svg class="w-6 h-6 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M1 12h22M12 1v22" />
+        <button onclick="toggleTimer()" id="startBtn" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700">
+          Start
+        </button>
+        <button onclick="resetTimer()" title="Reset timer" class="ml-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 shadow transition-colors duration-150">
+          <svg class="w-6 h-6 text-gray-600 hover:text-red-500 transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-3.59-7.03"/>
           </svg>
         </button>
       </div>
     </div>
 
-    <!-- Add Task -->
-    <div class="mt-8">
-      <button class="border-2 border-dashed border-gray-400 text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-100">
-        + Add Task
-      </button>
-    </div>
+<!-- Add Task -->
+<div class="mt-8">
+  <button onclick="openTaskModal()" class="border-2 border-dashed border-gray-400 text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-100">
+    + Add Task
+  </button>
+</div>
+
+<!-- Task Modal -->
+<div id="taskModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
+    <button onclick="closeTaskModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
+    <h2 class="text-2xl font-semibold mb-4">Add a New Task</h2>
+    <form action="{{ url_for('add_task') }}" method="POST">
+      <input name="description" type="text" placeholder="What do you want to work on?" class="w-full border px-4 py-2 rounded-lg mb-4 focus:outline-none focus:ring" required>
+      <div class="flex justify-end gap-4">
+        <button type="button" onclick="closeTaskModal()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Task</button>
+      </div>
+    </form>
   </div>
 </div>
+
+<!-- Task List -->
+<div class="mt-10 w-full max-w-md">
+  <h3 class="text-xl font-semibold mb-4 text-gray-800 text-left">Your Tasks</h3>
+  {% if tasks %}
+    <ul class="space-y-3">
+      {% for task in tasks %}
+        <li class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+          <div class="flex items-center gap-2">
+            <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}">
+              <button type="submit" title="Toggle complete">
+                {% if task.completed %}
+                  ✅
+                {% else %}
+                  ⭕
+                {% endif %}
+              </button>
+            </form>
+            <span class="{% if task.completed %}line-through text-gray-400{% endif %}">
+              {{ task.description }}
+            </span>
+          </div>
+          <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}">
+            <button type="submit" title="Delete task" class="text-red-500 hover:text-red-700">🗑</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500 text-center">No tasks yet. Add one above!</p>
+  {% endif %}
+</div>
+
+
+
+<script>
+  let mode = "pomodoro";
+  let isRunning = false;
+  let timerInterval = null;
+  let timeLeft = 25 * 60;
+
+  const modeDurations = {
+    pomodoro: 25 * 60,
+    short: 5 * 60,
+    long: 15 * 60
+  };
+
+  function updateTimerDisplay() {
+    const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const seconds = String(timeLeft % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+  }
+
+  function setMode(newMode) {
+    mode = newMode;
+    resetTimer();
+    highlightModeButton();
+  }
+
+  function highlightModeButton() {
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+      btn.classList.remove("bg-blue-100", "text-blue-700", "font-medium");
+      btn.classList.add("text-gray-500");
+    });
+    const active = document.getElementById(`mode-${mode}`);
+    active.classList.add("bg-blue-100", "text-blue-700", "font-medium");
+    active.classList.remove("text-gray-500");
+  }
+
+  function toggleTimer() {
+    const startBtn = document.getElementById('startBtn');
+    if (!isRunning) {
+      isRunning = true;
+      startBtn.textContent = "Pause";
+      timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          isRunning = false;
+          startBtn.textContent = "Start";
+          alert("Time's up!");
+        }
+      }, 1000);
+    } else {
+      clearInterval(timerInterval);
+      isRunning = false;
+      startBtn.textContent = "Start";
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    isRunning = false;
+    timeLeft = modeDurations[mode];
+    updateTimerDisplay();
+    document.getElementById('startBtn').textContent = "Start";
+  }
+
+  function openTaskModal() {
+  document.getElementById('taskModal').classList.remove('hidden');
+  }
+  function closeTaskModal() {
+  document.getElementById('taskModal').classList.add('hidden');
+  }
+
+
+  highlightModeButton();
+  updateTimerDisplay();
+</script>
 {% endblock %}

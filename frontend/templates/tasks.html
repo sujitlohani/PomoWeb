@@ -1,14 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Task List</h2>
-  <form method="POST">
-    <input type="text" name="task" placeholder="Enter task" required>
-    <button type="submit">Add Task</button>
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded shadow">
+  <h2 class="text-2xl font-bold mb-4">Your Tasks</h2>
+
+  <form method="POST" class="flex gap-2 mb-6">
+    <input type="text" name="description" placeholder="New task" class="flex-grow p-2 border rounded" required>
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Add</button>
   </form>
 
-  <ul>
-    {% for task in tasks %}
-      <li>{{ task }}</li>
-    {% endfor %}
-  </ul>
+  {% if tasks %}
+    <ul class="space-y-2">
+      {% for task in tasks %}
+        <li class="flex justify-between items-center p-2 border rounded">
+          <span {% if task.completed %}class="line-through text-gray-500"{% endif %}>
+            {{ task.description }}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500">No tasks yet. Add one above.</p>
+  {% endif %}
+</div>
 {% endblock %}
