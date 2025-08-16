@@ -1,24 +1,251 @@
-/* Subtle page noise for depth */
-.noise { position: fixed; inset: 0; opacity: .06; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.65'/%3E%3C/svg%3E"); pointer-events:none; }
 
-/* Reusable primitives */
-.nav-link { color: rgb(71 85 105); }
-.nav-link:hover { color: rgb(15 23 42); }
-.nav-link.active { color: rgb(34 197 94); color: rgb(50 156 126); }
+/* ------------------------------------------------------------------
+   Pomoweb • Zen Flat Theme (2025-08-09)
+   - Flat, minimal surfaces (no blur, no gradients, very light or no shadows)
+   - Improved text contrast, especially inside inputs while typing
+   - No HTML changes required
+------------------------------------------------------------------- */
 
-.glass-card { background: rgba(255,255,255,0.7); border: 1px solid rgba(15, 23, 42, 0.06); backdrop-filter: blur(8px); }
+/* ===== Variables ===== */
+:root {
+  --bg: #f3f7f5;
+  --bg-2: #f7faf9;
+  --text: #1d2a2e;
+  --muted: #5c6b70;
+  --accent: #319c7e;
+  --accent-2: #2b7a66;
+  --accent-soft: rgba(49,156,126,.12);
+  --ring: rgba(49,156,126,.28);
+  --card: #ffffff;
+  --border: rgba(15,23,42,.10);
+  --shadow: none;
+  --shadow-hover: none;
+}
 
-.input { width: 100%; padding: 0.75rem 0.9rem; border-radius: 0.75rem; border: 1px solid rgb(226 232 240); background: white; outline: none; }
-.input:focus { border-color: rgb(50 156 126); box-shadow: 0 0 0 3px rgba(50,156,126,.15); }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #a7d3c3;
+    --bg-2: #a7d3c3;
+    --text: #e9f4f0;
+    --muted: #1e1e1e;
+    --accent: #44c3a1;
+    --accent-2: #3aa98c;
+    --accent-soft: rgba(68,195,161,.16);
+    --ring: rgba(68,195,161,.35);
+    --card: #a7d3c3;
+    --border: rgba(233,244,240,.14);
+    --shadow: none;
+    --shadow-hover: none;
+  }
+}
 
-.btn-primary { display:inline-flex; align-items:center; justify-content:center; padding: 0.6rem 1rem; border-radius: 9999px; font-weight: 600; background: rgb(50 156 126); color: white; }
-.btn-primary:hover { filter: brightness(0.95); }
+/* ===== Base ===== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
-.btn-outline { display:inline-flex; align-items:center; justify-content:center; padding: 0.55rem 1rem; border-radius: 9999px; font-weight: 600; border: 1px solid rgb(203 213 225); color: rgb(30 41 59); background: white; }
-.btn-outline:hover { border-color: rgb(148 163 184); }
+/* ===== Containers & Cards ===== */
+.container-max { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
 
-.btn-ghost { padding: 0.45rem 0.9rem; border-radius: 9999px; background: transparent; color: rgb(51 65 85); border: 1px dashed rgb(203 213 225); }
-.btn-ghost:hover { background: rgba(241,245,249,.7); }
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: border-color .2s ease, background .2s ease;
+}
 
-.tab { padding: .35rem .8rem; border-radius: 9999px; font-weight: 500; color: rgb(100 116 139); }
-.active-tab { background: rgba(50,156,126,.12); color: rgb(34 58 47); border: 1px solid rgba(50,156,126,.25); }
+/* ===== Typography & Links ===== */
+h1, h2, h3 { letter-spacing: -0.01em; }
+p { color: var(--muted); }
+
+.link {
+  color: var(--accent-2);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+}
+.link:hover { color: var(--accent); }
+
+/* ===== Inputs ===== */
+.input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text);           /* Ensure visible typed text */
+  caret-color: var(--accent);   /* Cursor visible */
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  box-shadow: none;
+}
+/* Dark mode inputs */
+@media (prefers-color-scheme: dark) {
+  .input {
+    background: #e5f2ed;
+    border-color: var(--border);
+    color: var(--text);
+  }
+}
+.input::placeholder { color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+  background: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  .input:focus { background: #1d7979; }
+}
+.input:disabled { color: var(--muted); opacity: .8; }
+
+.input-compact { padding: .55rem .75rem; border-radius: 10px; }
+
+/* ===== Buttons (Flat) ===== */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .7rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: none;
+  transition: filter .2s ease, border-color .2s ease;
+}
+.btn-primary:hover { filter: brightness(.98); }
+.btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+
+.btn-outline {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .7rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: none;
+}
+.btn-outline:hover { border-color: rgba(15,23,42,.18); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .55rem .9rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1px dashed rgba(15,23,42,.15);
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+.btn-ghost:hover { background: rgba(15,23,42,.05); color: var(--text); }
+
+/* ===== Tabs ===== */
+.tab {
+  padding: .4rem .85rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid transparent;
+  background: transparent;
+}
+.tab:hover { background: rgba(15,23,42,.05); color: var(--text); }
+.active-tab {
+  background: var(--accent-soft);
+  border-color: rgba(49,156,126,.25);
+  color: #143229;
+}
+
+/* ===== Timer Display ===== */
+.timer-display {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+  font-size: clamp(2.3rem, 5vw + 1rem, 5rem);
+  font-weight: 800;
+  color: var(--text);
+  text-shadow: none;
+}
+
+/* ===== Progress ===== */
+.progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15,23,42,.10);
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width .4s ease;
+}
+
+/* ===== Lists & Items ===== */
+.list { display: grid; gap: .6rem; }
+.list-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .75rem;
+  padding: .8rem .95rem;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.list-item:hover { background: #ffffff; border-color: rgba(15,23,42,.14); }
+
+.badge {
+  padding: .25rem .6rem;
+  border-radius: 9999px;
+  font-size: .78rem;
+  font-weight: 700;
+  background: rgba(15,23,42,.10);
+  color: var(--muted);
+}
+
+/* ===== Tables ===== */
+.table { width: 100%; border-collapse: collapse; }
+.table thead th {
+  text-align: left; color: var(--muted); font-weight: 700; font-size: .85rem; padding: .6rem .6rem;
+  border-bottom: 1px solid var(--border);
+}
+.table tbody td { padding: .9rem .8rem; color: var(--text); border-bottom: 1px solid var(--border); }
+.table tbody tr:hover { background: rgba(15,23,42,.03); }
+
+/* ===== Misc ===== */
+.hr-soft { height: 1px; background: rgba(15,23,42,.10); border: 0; }
+.alert { padding: .8rem 1rem; border-radius: 12px; border: 1px solid var(--border); background: #ffffff; color: var(--text); }
+.alert-success { border-color: rgba(49,156,126,.28); background: rgba(49,156,126,.08); }
+.alert-error { border-color: rgba(220,38,38,.28); background: rgba(220,38,38,.10); }
+
+/* Focus visibility */
+:focus-visible { outline-offset: 3px; }
+*:focus-visible { outline-color: var(--accent); }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Make page fill viewport height and push footer down */
+html, body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0; /* Remove default spacing */
+}
+
+/* Let main content grow and push footer down */
+main {
+  flex: 1;
+}
+
+/* Optional: ensure footer is always full width */
+footer {
+  width: 100%;
+}
