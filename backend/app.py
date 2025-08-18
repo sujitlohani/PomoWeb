@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-
+from flask_migrate import Migrate
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
@@ -30,6 +30,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 with app.app_context():
     import os
     print("👉 Using DB at:", os.path.abspath(db.engine.url.database or ":memory:"))
@@ -46,6 +47,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
 
     # Proper two-way relationship
     tasks = db.relationship("Task", back_populates="user", lazy=True)
@@ -144,6 +146,12 @@ def login():
             return render_template("login.html", error="Invalid username or password")
 
         login_user(user)
+
+        # Check if the user is an admin
+        if user.is_admin:
+            return redirect(url_for("admin"))  # Redirect to admin page if admin
+        else:
+            return redirect(url_for("home"))  # Redirect to home page for regular users
         return redirect(url_for("home"))
 
     return render_template("login.html")
@@ -155,10 +163,28 @@ def logout():
     return redirect(url_for("login"))
 
 # ----- Admin/Report placeholders -----
-@app.route("/admin")
+@app.route("/admin", methods=["GET", "POST"])
 @login_required
 def admin():
-    return render_template("admin.html", users=[])
+    if not current_user.is_admin:
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        user_id = request.form.get("user_id")
+        description = request.form.get("task_description")
+        estimated = request.form.get("estimated", type=int) or 1
+
+        # Assign the task to the selected user
+        task = Task(description=description, estimated=estimated, user_id=user_id)
+        db.session.add(task)
+        db.session.commit()
+        return redirect(url_for("admin"))
+
+    users = User.query.all()
+    tasks = Task.query.all()
+    return render_template("admin.html", users=users, tasks=tasks)
+
+
 
 @app.route("/report")
 @login_required
@@ -202,13 +228,14 @@ def toggle_task(task_id: int):
     task.completed = not task.completed
     db.session.commit()
     
-    return jsonify({"success": True, "completed": task.completed})
+    return redirect(url_for('tasks'))
+
 
 
 
 @app.route("/delete_task/<int:task_id>", methods=["POST"])
 @login_required
-def delete_task(task_id: int):
+def delete_task(task_id):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id:
         return jsonify({"error": "Unauthorized"}), 403
@@ -216,7 +243,9 @@ def delete_task(task_id: int):
     db.session.delete(task)
     db.session.commit()
     
-    return jsonify({"success": True})
+    return redirect(url_for('tasks'))  # Redirect back to the tasks page after deletion
+
+
 
 
 
