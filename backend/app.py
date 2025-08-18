@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user, login_required,
@@ -173,32 +173,51 @@ def add_task():
     Minimal endpoint used by the Home modal to add a task.
     Accepts 'description' and optional 'estimated'.
     """
-    desc = request.form.get("description", "").strip()
-    est = request.form.get("estimated", type=int) or 1
-    if desc:
-        db.session.add(Task(description=desc, estimated=est, user_id=current_user.id))
-        db.session.commit()
-    return redirect(url_for("home"))
+    desc = request.json.get("description", "").strip()
+    est = request.json.get("estimated", 1)  # Estimated pomodoros
+
+    if not desc:
+        return jsonify({"error": "Task description is required"}), 400
+    
+    task = Task(description=desc, estimated=est, user_id=current_user.id)
+    db.session.add(task)
+    db.session.commit()
+
+    return jsonify({
+        "id": task.id,
+        "description": task.description,
+        "estimated": task.estimated,
+        "completed": task.completed
+    })
+
+
 
 @app.route("/toggle_task/<int:task_id>", methods=["POST"])
 @login_required
 def toggle_task(task_id: int):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id:
-        return "Unauthorized", 403
+        return jsonify({"error": "Unauthorized"}), 403
+    
     task.completed = not task.completed
     db.session.commit()
-    return redirect(url_for("home"))
+    
+    return jsonify({"success": True, "completed": task.completed})
+
+
 
 @app.route("/delete_task/<int:task_id>", methods=["POST"])
 @login_required
 def delete_task(task_id: int):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id:
-        return "Unauthorized", 403
+        return jsonify({"error": "Unauthorized"}), 403
+    
     db.session.delete(task)
     db.session.commit()
-    return redirect(url_for("home"))
+    
+    return jsonify({"success": True})
+
 
 
 # Optional user profile route if you still need it
