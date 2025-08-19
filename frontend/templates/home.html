@@ -43,7 +43,17 @@
                   </button>
                 </form>
 
-                <span class="{% if task.completed %}line-through text-slate-400{% endif %}">{{ task.description }}</span>
+                <span class="task-desc {% if task.completed %}line-through text-slate-400{% endif %}">{{ task.description }}</span>
+                  {% if task.assigned_by_admin %}
+                    <span class="ml-2 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700"
+                          title="Assigned by admin">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l7 3v6c0 5-3.8 8.6-7 9-3.2-.4-7-4-7-9V5l7-3z"/>
+                      </svg>
+                      admin
+                    </span>
+                  {% endif %}
+
               </div>
 
               <form id="delete-task-{{ task.id }}" class="task-form" data-task-id="{{ task.id }}">

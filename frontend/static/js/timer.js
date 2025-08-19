@@ -90,42 +90,74 @@ function deleteTask(taskId) {
 function deleteTaskFromList(taskId) {
   fetch(`/delete_task/${taskId}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
     body: JSON.stringify({})
   })
-  .then(response => response.json())
+  .then(r => r.json())
   .then(data => {
     if (data.success) {
-      document.getElementById(`task-${taskId}`).remove();
+      const el = document.getElementById(`task-${taskId}`);
+      if (el) el.remove();
     } else {
       console.error("Error deleting task:", data.error);
     }
   })
-  .catch(error => console.error("Error:", error));
+  .catch(err => console.error("Error:", err));
 }
 
 // Mark Task as Complete (without pausing the timer)
 function toggleTaskComplete(taskId) {
   fetch(`/toggle_task/${taskId}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
     body: JSON.stringify({})
   })
-  .then(response => response.json())
+  .then(r => r.json())
   .then(data => {
-    if (data.success) {
-      const taskElement = document.getElementById(`task-${taskId}`);
-      taskElement.classList.toggle('line-through', data.completed);
-      taskElement.querySelector('span').classList.toggle('bg-accent-500', data.completed);
-
-      // Move task to completed section
-      const completedTaskList = document.getElementById("completedTaskList");
-      completedTaskList.appendChild(taskElement); // Move to the Completed section
-    } else {
+    if (!data.success) {
       console.error("Error toggling task:", data.error);
+      return;
+    }
+
+    const taskElement = document.getElementById(`task-${taskId}`);
+    if (!taskElement) return;
+
+    // toggle dot in the round button
+    const btn = taskElement.querySelector('form button');
+    if (btn) {
+      if (data.completed) {
+        // ensure a filled dot exists
+        btn.innerHTML = '<span class="h-3 w-3 rounded-full bg-accent-500 inline-block"></span>';
+      } else {
+        // remove the dot
+        btn.innerHTML = '';
+      }
+    }
+
+    // toggle line-through on description
+    const desc = taskElement.querySelector('.task-desc');
+    if (desc) {
+      if (data.completed) {
+        desc.classList.add('line-through', 'text-slate-400');
+      } else {
+        desc.classList.remove('line-through', 'text-slate-400');
+      }
+    }
+
+    // move between lists
+    if (data.completed) {
+      document.getElementById('completedTaskList').appendChild(taskElement);
+    } else {
+      document.getElementById('taskList').appendChild(taskElement);
     }
   })
-  .catch(error => console.error("Error:", error));
+  .catch(err => console.error("Error:", err));
 }
 
 // Add New Task
@@ -136,38 +168,45 @@ function addTask(event) {
 
   fetch("/add_task", {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      description: description,
-      estimated: 1
-    })
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({ description, estimated: 1 })
   })
-  .then(response => response.json())
+  .then(r => r.json())
   .then(data => {
     if (data.id) {
       const taskList = document.getElementById("taskList");
       const newTask = document.createElement("div");
-      newTask.classList.add("flex", "items-center", "justify-between", "bg-white/70", "rounded-xl", "border", "border-slate-200", "p-3");
+      newTask.className = "flex items-center justify-between bg-white/70 rounded-xl border border-slate-200 p-3";
       newTask.id = `task-${data.id}`;
-      newTask.innerHTML = ` 
+      newTask.innerHTML = `
         <div class="flex items-center gap-3">
           <form id="toggle-task-${data.id}" class="task-form" data-task-id="${data.id}">
-            <button type="button" class="h-5 w-5 rounded-full border border-slate-300 flex items-center justify-center" onclick="toggleTask(${data.id})">
-              <span class="h-3 w-3 rounded-full inline-block"></span>
-            </button>
+            <button type="button" class="h-5 w-5 rounded-full border border-slate-300 flex items-center justify-center" onclick="toggleTask(${data.id})"></button>
           </form>
-          <span>${data.description}</span>
+          <span class="task-desc">${data.description}</span>
+          ${data.assigned_by_admin ? `
+            <span class="ml-2 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700" title="Assigned by admin">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l7 3v6c0 5-3.8 8.6-7 9-3.2-.4-7-4-7-9V5l7-3z"/>
+              </svg>
+              admin
+            </span>` : ``}
         </div>
         <form id="delete-task-${data.id}" class="task-form" data-task-id="${data.id}">
           <button type="button" onclick="deleteTask(${data.id})" class="text-slate-500 hover:text-red-600" title="Delete">Delete</button>
         </form>
       `;
       taskList.appendChild(newTask);
+      document.getElementById("taskDescription").value = "";
       closeTaskModal();
     }
   })
-  .catch(error => console.error("Error adding task:", error));
+  .catch(err => console.error("Error adding task:", err));
 }
+
 
 document.getElementById("addTaskForm").addEventListener("submit", addTask);
 

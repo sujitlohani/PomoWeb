@@ -15,9 +15,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(
     __name__,
     template_folder="../frontend/templates",
-    static_folder="../frontend/static"  
+    static_folder="../frontend/static"
 )
-
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "your_super_secret_key")
 
@@ -32,9 +31,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 with app.app_context():
-    import os
     print("👉 Using DB at:", os.path.abspath(db.engine.url.database or ":memory:"))
-
 
 login_manager = LoginManager()
 login_manager.login_view = "login"
@@ -60,6 +57,10 @@ class Task(db.Model):
     estimated = db.Column(db.Integer, default=1)          # estimated pomodoros
     completed = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    completed_at = db.Column(db.DateTime, nullable=True)
+    # NEW: mark tasks created by an admin
+    assigned_by_admin = db.Column(db.Boolean, default=False, nullable=False)
 
     user = db.relationship("User", back_populates="tasks")
 
@@ -106,13 +107,13 @@ def tasks():
             db.session.commit()
         return redirect(url_for("tasks"))
 
-    tasks = (
+    tasks_list = (
         Task.query
         .filter_by(user_id=current_user.id)
         .order_by(Task.timestamp.desc())
         .all()
     )
-    return render_template("tasks.html", tasks=tasks)
+    return render_template("tasks.html", tasks=tasks_list)
 
 # ----- Auth -----
 @app.route("/register", methods=["GET", "POST"])
@@ -147,11 +148,9 @@ def login():
 
         login_user(user)
 
-        # Check if the user is an admin
+        # Redirect admins to /admin, others to /home
         if user.is_admin:
-            return redirect(url_for("admin"))  # Redirect to admin page if admin
-        else:
-            return redirect(url_for("home"))  # Redirect to home page for regular users
+            return redirect(url_for("admin"))
         return redirect(url_for("home"))
 
     return render_template("login.html")
@@ -162,7 +161,7 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-# ----- Admin/Report placeholders -----
+# ----- Admin -----
 @app.route("/admin", methods=["GET", "POST"])
 @login_required
 def admin():
@@ -170,21 +169,25 @@ def admin():
         return redirect(url_for("home"))
 
     if request.method == "POST":
-        user_id = request.form.get("user_id")
-        description = request.form.get("task_description")
+        user_id = request.form.get("user_id", type=int)
+        description = (request.form.get("task_description") or "").strip()
+        # estimated might not be present in the admin form; default to 1
         estimated = request.form.get("estimated", type=int) or 1
 
-        # Assign the task to the selected user
-        task = Task(description=description, estimated=estimated, user_id=user_id)
-        db.session.add(task)
-        db.session.commit()
+        if user_id and description:
+            task = Task(
+                description=description,
+                estimated=estimated,
+                user_id=user_id,
+                assigned_by_admin=True  # flag for UI
+            )
+            db.session.add(task)
+            db.session.commit()
         return redirect(url_for("admin"))
 
-    users = User.query.all()
-    tasks = Task.query.all()
+    users = User.query.order_by(User.username.asc()).all()
+    tasks = Task.query.order_by(Task.timestamp.desc()).all()
     return render_template("admin.html", users=users, tasks=tasks)
-
-
 
 @app.route("/report")
 @login_required
@@ -196,15 +199,27 @@ def report():
 @login_required
 def add_task():
     """
-    Minimal endpoint used by the Home modal to add a task.
-    Accepts 'description' and optional 'estimated'.
+    Endpoint used by the Home modal to add a task.
+    Accepts JSON: 'description' and optional 'estimated'.
     """
-    desc = request.json.get("description", "").strip()
-    est = request.json.get("estimated", 1)  # Estimated pomodoros
+    # Accept JSON safely; if you ever post form to this route, this won't crash.
+    desc = ""
+    est = 1
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+        desc = (payload.get("description") or "").strip()
+        est = payload.get("estimated", 1)
+        try:
+            est = int(est)
+        except (TypeError, ValueError):
+            est = 1
+    else:
+        desc = (request.form.get("description") or "").strip()
+        est = request.form.get("estimated", type=int) or 1
 
     if not desc:
         return jsonify({"error": "Task description is required"}), 400
-    
+
     task = Task(description=desc, estimated=est, user_id=current_user.id)
     db.session.add(task)
     db.session.commit()
@@ -213,9 +228,9 @@ def add_task():
         "id": task.id,
         "description": task.description,
         "estimated": task.estimated,
-        "completed": task.completed
+        "completed": task.completed,
+        "assigned_by_admin": task.assigned_by_admin
     })
-
 
 
 @app.route("/toggle_task/<int:task_id>", methods=["POST"])
@@ -224,30 +239,37 @@ def toggle_task(task_id: int):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id:
         return jsonify({"error": "Unauthorized"}), 403
-    
+
     task.completed = not task.completed
+    # If you added completed_at earlier:
+    try:
+        task.completed_at = datetime.utcnow() if task.completed else None
+    except Exception:
+        pass
+
     db.session.commit()
-    
-    return redirect(url_for('tasks'))
 
-
+    # If it's AJAX, return JSON; otherwise, redirect (for /tasks page forms)
+    is_ajax = request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if is_ajax:
+        return jsonify({"success": True, "completed": task.completed, "id": task.id})
+    return redirect(request.headers.get("Referer") or url_for("tasks"))
 
 
 @app.route("/delete_task/<int:task_id>", methods=["POST"])
 @login_required
-def delete_task(task_id):
+def delete_task(task_id: int):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id:
         return jsonify({"error": "Unauthorized"}), 403
-    
+
     db.session.delete(task)
     db.session.commit()
-    
-    return redirect(url_for('tasks'))  # Redirect back to the tasks page after deletion
 
-
-
-
+    is_ajax = request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if is_ajax:
+        return jsonify({"success": True, "id": task_id})
+    return redirect(request.headers.get("Referer") or url_for("tasks"))
 
 # Optional user profile route if you still need it
 @app.route("/user/<usr>")
