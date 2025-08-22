@@ -1,12 +1,12 @@
 let mode = "pomodoro";
 let isRunning = false;
 let timerInterval = null;
-let timeLeft = 25 * 60;  // Default Focus time
+let timeLeft = 25 * 60;  
 
 const modeDurations = { 
-  pomodoro: 25 * 60, // Focus
-  short: 5 * 60,     // Short Break
-  long: 15 * 60      // Long Break
+  pomodoro: 25 * 60, 
+  short: 5 * 60,    
+  long: 15 * 60      
 };
 
 // Update the timer display
@@ -19,7 +19,7 @@ function updateTimerDisplay() {
 // Set the mode (Focus, Short, Long)
 function setMode(newMode) {
   mode = newMode;
-  timeLeft = modeDurations[mode]; // Set the time left according to mode
+  timeLeft = modeDurations[mode]; 
   resetTimer();
   highlightModeButton();
 }
@@ -61,7 +61,6 @@ function toggleTask(taskId) {
   togglePopup.classList.remove("hidden");
 
   document.getElementById("confirmToggleButton").onclick = function() {
-    // No timer interaction here, just toggle the task completion
     toggleTaskComplete(taskId);
     togglePopup.classList.add("hidden");
   };
@@ -128,14 +127,11 @@ function toggleTaskComplete(taskId) {
     const taskElement = document.getElementById(`task-${taskId}`);
     if (!taskElement) return;
 
-    // toggle dot in the round button
     const btn = taskElement.querySelector('form button');
     if (btn) {
       if (data.completed) {
-        // ensure a filled dot exists
         btn.innerHTML = '<span class="h-3 w-3 rounded-full bg-accent-500 inline-block"></span>';
       } else {
-        // remove the dot
         btn.innerHTML = '';
       }
     }

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Reset Password · Pomoweb{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto glass-card rounded-2xl p-6">
+  {% if expired %}
+    <h2 class="text-xl font-semibold mb-2">Link expired</h2>
+    <p class="text-slate-600">Please request a new reset link.</p>
+  {% elif invalid %}
+    <h2 class="text-xl font-semibold mb-2">Invalid link</h2>
+    <p class="text-slate-600">This reset link is not valid. Please request a new one.</p>
+  {% else %}
+    <h2 class="text-xl font-semibold mb-4">Create a new password</h2>
+    <form method="POST" class="space-y-3">
+      <input name="password" type="password" placeholder="New password" class="input w-full" required>
+      <input name="confirm" type="password" placeholder="Confirm password" class="input w-full" required>
+      {% if error %}<p class="text-red-600 text-sm">{{ error }}</p>{% endif %}
+      <div class="text-right"><button class="btn-primary">Update password</button></div>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

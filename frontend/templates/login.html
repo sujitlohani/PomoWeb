@@ -1,24 +1,44 @@
 {% extends "base.html" %}
 {% block title %}Login · Pomoweb{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto">
-  <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-soft">
-    <h2 class="text-xl font-semibold mb-2">Welcome back</h2>
-    <p class="text-slate-600 mb-6">Sign in to continue your focus streak.</p>
-
-    {% if error %}
-      <p class="mb-4 text-red-600">{{ error }}</p>
+<div class="max-w-md mx-auto glass-card rounded-2xl p-6 shadow-soft">
+  <h1 class="text-xl font-semibold mb-4">Welcome back</h1>
+  <form method="POST" class="space-y-4">
+    {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     {% endif %}
 
-    <form method="POST" class="space-y-4">
-      <input type="text" name="username" placeholder="Username" required class="input" />
-      <input type="password" name="password" placeholder="Password" required class="input" />
-      <button type="submit" class="btn-primary w-full">Login</button>
-    </form>
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Email or Username</label>
+      <input
+        class="input w-full"
+        type="text"
+        name="identifier"
+        placeholder="you@example.com or your username"
+        required
+      >
+    </div>
 
-    <p class="text-sm text-slate-600 mt-6">New here?
-      <a href="{{ url_for('register') }}" class="link">Create an account</a>
-    </p>
-  </div>
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Password</label>
+      <input class="input w-full" type="password" name="password" placeholder="••••••••" required>
+    </div>
+
+    {% if error %}
+      <p class="text-sm text-red-600">{{ error }}</p>
+    {% endif %}
+
+    <div class="flex items-center justify-between pt-2">
+      <a href="{{ url_for('forgot_password') }}" class="text-sm text-blue-600 hover:underline">
+        Forgot password?
+      </a>
+      <button class="btn-primary">Log in</button>
+    </div>
+  </form>
+
+  <p class="mt-4 text-sm text-slate-600">
+    Don’t have an account?
+    <a href="{{ url_for('register') }}" class="text-blue-600 hover:underline">Register</a>
+  </p>
 </div>
 {% endblock %}

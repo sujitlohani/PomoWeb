@@ -26,7 +26,7 @@ body {
   --border: rgba(15,23,42,.10);
   --shadow: none;
   --shadow-hover: none;
-  --content-max: 1100px; /* single source of truth for content width */
+  --content-max: 1100px; 
 }
 
 
@@ -62,11 +62,10 @@ body {
 /* ===== Containers & Cards ===== */
 .container-max { max-width: var(--content-max); margin: 0 auto; padding: 2rem 1rem; }
 
-/* Keep your green cards (#a7d3c3), slightly softened */
 .glass-card {
   background: #a7d3c3;
   border: 1px solid var(--border);
-  border-radius: 8px;             /* less rounded for calmer feel */
+  border-radius: 8px;             
   box-shadow: var(--shadow);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -300,13 +299,13 @@ main:has(#timer) .secondary-grid {
 
 /* ===== Navbar & Footer: consistent everywhere ===== */
 header {
-  background: var(--card);                /* respects light/dark card color */
+  background: var(--card);                
   border-bottom: 1px solid var(--border);
-  width: 100%;                            /* full-width bar */
+  width: 100%;                           
 }
 
 header > nav {
-  max-width: var(--content-max);          /* single consistent width */
+  max-width: var(--content-max);          
   margin-inline: auto;
   padding: 0.75rem 1rem;
   display: flex;
@@ -323,7 +322,3 @@ footer > .container {
   padding-inline: 1rem;
 }
 
-/* NOTE: Removed the previous special-case:
-   body:has(#timer) header > nav { max-width: 44rem; }
-   so the navbar no longer shrinks on the timer page.
-*/

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Forgot Password · Pomoweb{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto glass-card rounded-2xl p-6">
+  <h2 class="text-xl font-semibold mb-4">Forgot your password?</h2>
+  <p class="text-slate-600 mb-4">Enter your email or username. We'll send the reset link to the email on file.</p>
+  <form method="POST" class="space-y-3">
+    <input name="identifier" type="text" placeholder="you@example.com or your username" class="input w-full" required>
+    {% if error %}<p class="text-red-600 text-sm">{{ error }}</p>{% endif %}
+    <div class="text-right"><button class="btn-primary">Send reset link</button></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,24 +1,36 @@
 {% extends "base.html" %}
 {% block title %}Register · Pomoweb{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto">
-  <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-soft">
-    <h2 class="text-xl font-semibold mb-2">Create account</h2>
-    <p class="text-slate-600 mb-6">A calmer way to focus and get work done.</p>
+<div class="max-w-md mx-auto glass-card rounded-2xl p-6 shadow-soft">
+  <h1 class="text-xl font-semibold mb-4">Create your account</h1>
+  <form method="POST" class="space-y-4">
+    {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token }}">{% endif %}
 
-    {% if error %}
-      <p class="mb-4 text-red-600">{{ error }}</p>
-    {% endif %}
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Username</label>
+      <input class="input w-full" type="text" name="username" placeholder="yourname" required>
+    </div>
 
-    <form method="POST" class="space-y-4">
-      <input type="text" name="username" placeholder="Username" required class="input" />
-      <input type="password" name="password" placeholder="Password" required class="input" />
-      <button type="submit" class="btn-primary w-full">Register</button>
-    </form>
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Email</label>
+      <input class="input w-full" type="email" name="email" placeholder="you@example.com" required>
+    </div>
 
-    <p class="text-sm text-slate-600 mt-6">Already have an account?
-      <a href="{{ url_for('login') }}" class="link">Sign in</a>
-    </p>
-  </div>
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Password</label>
+      <input class="input w-full" type="password" name="password" placeholder="••••••••" required>
+    </div>
+
+    {% if error %}<p class="text-sm text-red-600">{{ error }}</p>{% endif %}
+
+    <div class="text-right pt-2">
+      <button class="btn-primary">Create account</button>
+    </div>
+  </form>
+
+  <p class="mt-4 text-sm text-slate-600">
+    Already have an account?
+    <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Log in</a>
+  </p>
 </div>
 {% endblock %}
