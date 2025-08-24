@@ -1,10 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="container mx-auto max-w-4xl px-6 py-6">
-    <h2 class="text-3xl font-semibold text-center text-gray-800 mb-6">Admin Dashboard</h2>
+<div class="flex min-h-screen">
 
-    <!-- Task Assignment Section -->
+  <aside class="w-64 bg-gray-800 text-white flex flex-col">
+    <div class="p-6 text-2xl font-bold border-b border-gray-700">
+      Admin
+    </div>
+
+    <div class="p-4 text-sm uppercase tracking-wide text-gray-400">Users</div>
+    <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+      {% for u in users %}
+        {% if not u.is_admin %}
+        <button
+          type="button"
+          class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          data-user-id="{{ u.id }}"
+          data-username="{{ u.username }}"
+          data-tasks='{{ tasks_by_user[u.id] | tojson }}'
+          onclick="openUserTasks(this)">
+          {{ u.username }}
+        </button>
+        {% endif %}
+      {% endfor %}
+    </nav>
+
+  </aside>
+
+  <main class="flex-1 bg-gray-50 p-8">
+    <h2 class="text-3xl font-semibold text-gray-800 mb-6">Admin Dashboard</h2>
+
     <div class="bg-white p-6 rounded-lg shadow-lg">
       <h3 class="text-xl font-medium text-gray-700 mb-4">Assign a Task</h3>
       <form method="POST" class="space-y-4">
@@ -44,7 +69,6 @@
                 {{ task.description }}
                 — <span class="text-slate-500">Assigned to</span>
                 <strong class="text-blue-600">{{ task.user.username }}</strong>
-                
                 {% if task.assigned_by_admin %}
                   <span class="ml-2 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700"
                         title="Assigned by admin">
@@ -55,7 +79,6 @@
                   </span>
                 {% endif %}
               </p>
-
               <p class="text-sm mt-1">
                 {% if task.completed %}
                   <span class="text-green-700 font-medium">✔ Completed</span>
@@ -69,8 +92,6 @@
                 {% endif %}
               </p>
             </div>
-
-            <!-- quick status badge on the right -->
             <div>
               {% if task.completed %}
                 <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Done</span>
@@ -82,5 +103,63 @@
         {% endfor %}
       </ul>
     </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div id="userTasksModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/50" onclick="closeUserTasks()"></div>
+  <div class="relative mx-auto mt-24 w-11/12 max-w-2xl bg-white rounded-xl shadow-2xl">
+    <div class="flex justify-between items-center px-6 py-4 border-b">
+      <h3 id="modalTitle" class="text-xl font-semibold text-gray-800">User Tasks</h3>
+      <button class="p-2 rounded hover:bg-gray-100" onclick="closeUserTasks()"
+              aria-label="Close">
+        ✕
+      </button>
+    </div>
+    <div id="modalBody" class="p-6">
+    </div>
+    <div class="px-6 py-4 border-t text-right">
+      <button class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              onclick="closeUserTasks()">Close</button>
+    </div>
   </div>
+</div>
+
+<script>
+  function openUserTasks(btn) {
+    const username = btn.getAttribute('data-username');
+    const tasks = JSON.parse(btn.getAttribute('data-tasks') || "[]");
+
+    document.getElementById('modalTitle').textContent = `Tasks for ${username}`;
+
+    if (!tasks.length) {
+      document.getElementById('modalBody').innerHTML =
+        `<p class="text-gray-600">No tasks assigned.</p>`;
+    } else {
+      const items = tasks.map(t => {
+        const badge = t.completed
+          ? `<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Done</span>`
+          : `<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">Open</span>`;
+        return `
+          <li class="py-3 flex justify-between">
+            <div>
+              <p class="font-medium text-gray-800">${t.description}</p>
+              ${t.timestamp ? `<p class="text-sm text-gray-500">Created ${t.timestamp}</p>` : ``}
+            </div>
+            ${badge}
+          </li>`;
+      }).join('');
+
+      document.getElementById('modalBody').innerHTML =
+        `<ul class="divide-y divide-gray-200">${items}</ul>`;
+    }
+
+    document.getElementById('userTasksModal').classList.remove('hidden');
+  }
+
+  function closeUserTasks() {
+    document.getElementById('userTasksModal').classList.add('hidden');
+  }
+</script>
 {% endblock %}

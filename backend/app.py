@@ -208,7 +208,7 @@ def admin():
                 description=description,
                 estimated=estimated,
                 user_id=user_id,
-                assigned_by_admin=True  
+                assigned_by_admin=True
             )
             db.session.add(task)
             db.session.commit()
@@ -216,7 +216,26 @@ def admin():
 
     users = User.query.order_by(User.username.asc()).all()
     tasks = Task.query.order_by(Task.timestamp.desc()).all()
-    return render_template("admin.html", users=users, tasks=tasks)
+
+    tasks_by_user = {}
+    for u in users:
+        user_tasks = []
+        for t in u.tasks: 
+            user_tasks.append({
+                "id": t.id,
+                "description": t.description,
+                "completed": bool(t.completed),
+                "timestamp": t.timestamp.strftime('%Y-%m-%d %H:%M') if t.timestamp else None
+            })
+        tasks_by_user[u.id] = user_tasks
+
+    return render_template(
+        "admin.html",
+        users=users,
+        tasks=tasks,
+        tasks_by_user=tasks_by_user
+    )
+
 
 @app.route("/report")
 @login_required
