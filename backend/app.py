@@ -84,6 +84,21 @@ class Task(db.Model):
 with app.app_context():
     db.create_all()
 
+    if not User.query.filter_by(username="admin").first():
+        from werkzeug.security import generate_password_hash
+        admin = User(
+            username="admin",
+            email="admin@example.com",
+            password=generate_password_hash("admin123"),
+            is_admin=True
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print("✅ Admin user created: admin / admin123")
+    else:
+        print("ℹ️ Admin already exists")
+
+
 
 
 def get_serializer():
