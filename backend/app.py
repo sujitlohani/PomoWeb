@@ -382,6 +382,27 @@ def reset_password(token):
 
     return render_template("reset.html", token=token)
 
+    
+
+@app.route("/create_admin")
+def create_admin():
+    from werkzeug.security import generate_password_hash
+    from backend.app import db, User  # adjust import if needed
+
+    if User.query.filter_by(username="admin").first():
+        return "Admin already exists ✅"
+
+    admin = User(
+        username="admin",
+        email="admin@example.com",
+        password=generate_password_hash("admin123"),
+        is_admin=True
+    )
+    db.session.add(admin)
+    db.session.commit()
+    return "✅ Admin user created successfully!"
+
+
 
 
 
